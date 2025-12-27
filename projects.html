@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .progress-track {
+            background: #eee;
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .active-project-warning {
+            display: none;
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ffeeba;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container" style="animation: fadeIn var(--anim-duration) ease;">
+        <div class="page-header card-premium" style="padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+            <h1 style="margin: 0;">🚀 Projects</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Launch Project</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div id="projectLimitWarning" class="active-project-warning">
+            ⚠️ You have 2 active projects. Finish one before starting another!
+        </div>
+
+        <div class="view-controls mb-4">
+            <button class="btn btn-sm" onclick="filterStatus('Active')">Active 🚀</button>
+            <button class="btn btn-sm" onclick="filterStatus('Paused')">Paused ⏸️</button>
+            <button class="btn btn-sm" onclick="filterStatus('Completed')">Completed ✅</button>
+        </div>
+
+        <div id="projectContainer" class="grid-layout">
+            <!-- Projects injected here -->
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="projectModal">
+        <div class="modal card-premium" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Project Blueprint</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="projectForm">
+                <div class="form-group">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" name="name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Desired Outcome</label>
+                    <textarea name="outcome" class="form-input" rows="2" placeholder="What does success look like?"
+                        required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deadline</label>
+                    <input type="date" name="deadline" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Final Deliverable</label>
+                    <input type="text" name="deliverable" class="form-input"
+                        placeholder="e.g. PDF Report, Hosted Website">
+                </div>
+                <!-- Status hidden, defaults to Active -->
+                <input type="hidden" name="status" value="Active">
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Start Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let currentStatus = 'Active';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderProjects();
+        });
+
+        function filterStatus(status) {
+            currentStatus = status;
+            renderProjects();
+        }
+
+        function setupForm() {
+            const form = document.getElementById('projectForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                // Rule: Max 2 active
+                if (!form.dataset.editId && data.status === 'Active') {
+                    const activeCount = dataManager.getData('projects').filter(p => p.status === 'Active').length;
+                    if (activeCount >= 2) {
+                        alert('Warning: You already have 2 active projects. Consider pausing one first.');
+                        // Allow saving, but warn
+                    }
+                }
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('projects', form.dataset.editId, data);
+                    showToast('Project updated');
+                } else {
+                    dataManager.addItem('projects', data);
+                    showToast('Project launched! 🚀');
+                }
+                closeModal();
+                renderProjects();
+            });
+        }
+
+        function renderProjects() {
+            let projects = dataManager.getData('projects');
+
+            // Check active limit for banner
+            const activeCount = projects.filter(p => p.status === 'Active').length;
+            document.getElementById('projectLimitWarning').style.display = activeCount > 2 ? 'block' : 'none';
+
+            projects = projects.filter(p => p.status === currentStatus);
+            const container = document.getElementById('projectContainer');
+
+            if (projects.length === 0) {
+                container.innerHTML = '<p class="text-gray col-span-full text-center p-8">No projects in this view.</p>';
+                return;
+            }
+
+            let html = '';
+            projects.forEach(p => {
+                // Calculate progress based on linked tasks (Simulated for now as tasks link to project ID)
+                // Real implementation would query tasks
+                const progress = calculateProgress(p.id) || 0;
+
+                html += `
+                    <div class="card" style="border-top: 4px solid var(--color-primary);">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 style="margin: 0; font-size: 1.1rem;">${utils.escapeHtml(p.name)}</h3>
+                            <button class="btn btn-xs btn-secondary" onclick="editProject('${p.id}')">Edit</button>
+                        </div>
+                        <p class="text-gray text-sm mb-3">🎯 ${utils.escapeHtml(p.outcome)}</p>
+                        
+                        <div class="bg-light p-2 rounded mb-3 text-sm">
+                             <div>📦 <strong>Deliverable:</strong> ${utils.escapeHtml(p.deliverable || 'N/A')}</div>
+                             <div>⏳ <strong>Deadline:</strong> ${p.deadline || 'None'}</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs text-gray mb-1">
+                            <span>Progress</span>
+                            <span>${progress}%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+
+                         <div class="flex justify-between mt-4">
+                            ${p.status === 'Active' ? `<button class="btn btn-sm" onclick="setStatus('${p.id}', 'Paused')">⏸️ Pause</button>` : ''}
+                            ${p.status === 'Paused' ? `<button class="btn btn-sm" onclick="setStatus('${p.id}', 'Active')">▶️ Resume</button>` : ''}
+                            ${p.status !== 'Completed' ? `<button class="btn btn-sm btn-success" onclick="setStatus('${p.id}', 'Completed')">✅ Finish</button>` : ''}
+                            <button class="btn btn-sm btn-danger" onclick="deleteProject('${p.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function calculateProgress(projectId) {
+            const tasks = dataManager.getData('tasks'); // Assuming tasks have 'projectId' or logic
+            // Since we don't have direct linking yet in tasks modal, we'll return a random placeholder 
+            // OR checks for tasks with linked projects if implemented.
+            // For now, let's just return 0 to be safe, or implement real logic later.
+            return 0; // Placeholder
+        }
+
+        function setStatus(id, status) {
+            const p = dataManager.getItemById('projects', id);
+            p.status = status;
+            dataManager.updateItem('projects', id, p);
+            renderProjects();
+        }
+
+        function openAddModal() {
+            document.getElementById('projectForm').reset();
+            delete document.getElementById('projectForm').dataset.editId;
+            document.getElementById('projectModal').classList.add('active');
+        }
+
+        function editProject(id) {
+            const p = dataManager.getItemById('projects', id);
+            if (!p) return;
+            const form = document.getElementById('projectForm');
+            form.dataset.editId = id;
+            form.elements.name.value = p.name;
+            form.elements.outcome.value = p.outcome;
+            form.elements.deadline.value = p.deadline;
+            form.elements.deliverable.value = p.deliverable;
+            document.getElementById('projectModal').classList.add('active');
+        }
+
+        async function deleteProject(id) {
+            if (await confirmDelete('Delete project?')) {
+                dataManager.deleteItem('projects', id);
+                renderProjects();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

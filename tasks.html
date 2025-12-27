@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks - SECOND BRAIN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .task-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-lg);
+            height: calc(100vh - 250px);
+            min-height: 500px;
+        }
+
+        @media (max-width: 992px) {
+            .task-board {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: calc(100vh - 180px);
+                gap: 16px;
+            }
+
+            .task-column {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+
+        .task-column {
+            display: flex;
+            flex-direction: column;
+            padding: var(--spacing-md);
+            background: var(--color-bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .column-header h3 {
+            margin: 0;
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .task-card {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--color-accent);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .priority-High {
+            border-left-color: var(--color-danger);
+        }
+
+        .priority-Medium {
+            border-left-color: var(--color-warning);
+        }
+
+        .priority-Low {
+            border-left-color: var(--color-success);
+        }
+
+        .time-badge {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            background: var(--color-bg-card);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .two-min-rule {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+            border-left: 4px solid #ffd700;
+            border-radius: var(--radius-md);
+        }
+
+        @media (max-width: 576px) {
+            .two-min-rule {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container" style="animation: fadeIn var(--anim-duration) ease;">
+        <div class="page-header card-premium" style="padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+            <h1 style="margin: 0;">✅ To-Do List</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ New Task</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="two-min-rule card-premium">
+            <div style="font-size: 1.5rem;">⚡</div>
+            <div>
+                <strong>The 2-Minute Rule:</strong> If a task takes less than 2 minutes, do it now.
+            </div>
+        </div>
+
+        <div class="task-board">
+            <!-- Today Column -->
+            <div class="task-column card-premium">
+                <div class="column-header col-today">
+                    <h3>🔥 Today</h3>
+                    <span class="badge badge-red" id="todayCount">0/3</span>
+                </div>
+                <div id="col-Today" class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
+
+            <!-- This Week Column -->
+            <div class="task-column card-premium">
+                <div class="column-header col-week">
+                    <h3>📅 This Week</h3>
+                    <span class="badge badge-yellow">Planned</span>
+                </div>
+                <div id="col-Week" class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
+
+            <!-- Backlog Column -->
+            <div class="task-column card-premium">
+                <div class="column-header col-backlog">
+                    <h3>🧠 Backlog</h3>
+                    <span class="badge badge-gray">Brain Dump</span>
+                </div>
+                <div id="col-Backlog" class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal card-premium">
+            <div class="modal-header">
+                <h2 class="modal-title">New Task</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label class="form-label">Task Name</label>
+                    <input type="text" name="name" class="form-input" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">When?</label>
+                    <select name="status" class="form-select" required onchange="checkTodayLimit(this)">
+                        <option value="Today">🔥 Today (Focus)</option>
+                        <option value="Week">📅 This Week</option>
+                        <option value="Backlog">🧠 Backlog</option>
+                    </select>
+                    <small class="text-danger hidden" id="todayLimitWarning">Limit reached! Only 3 tasks allowed for
+                        Today.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time Estimate</label>
+                    <select name="timeBlock" class="form-select" required>
+                        <option value="15m">⚡ Quick (15m)</option>
+                        <option value="25m">🍅 Pomodoro (25m)</option>
+                        <option value="60m">🐺 Deep Work (60m)</option>
+                        <option value="90m+">🐘 Mammoth (90m+)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select">
+                        <option value="High">High</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderTasks();
+
+            dataManager.onUpdate((db) => {
+                if (!db || db === 'tasks') renderTasks();
+            });
+        });
+
+        function setupForm() {
+            const form = document.getElementById('taskForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                if (data.status === 'Today') {
+                    const todayTasks = dataManager.getData('tasks').filter(t => t.status === 'Today' && t.id !== form.dataset.editId).length;
+                    if (todayTasks >= 3) {
+                        showToast('Focus! Limit of 3 tasks for today reached.', 'error');
+                        return;
+                    }
+                }
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('tasks', form.dataset.editId, data);
+                    showToast('Task updated');
+                } else {
+                    dataManager.addItem('tasks', data);
+                    showToast('Task added');
+                }
+                closeModal();
+            });
+        }
+
+        function renderTasks() {
+            const tasks = dataManager.getData('tasks');
+            const cols = {
+                'Today': document.getElementById('col-Today'),
+                'Week': document.getElementById('col-Week'),
+                'Backlog': document.getElementById('col-Backlog')
+            };
+
+            Object.values(cols).forEach(el => el.innerHTML = '');
+
+            let todayCount = 0;
+
+            tasks.forEach(task => {
+                if (cols[task.status]) {
+                    if (task.status === 'Today') todayCount++;
+
+                    const el = document.createElement('div');
+                    el.className = `task-card priority-${task.priority}`;
+                    el.draggable = true;
+                    el.ondragstart = (e) => drag(e, task.id);
+                    el.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <strong>${utils.escapeHtml(task.name)}</strong>
+                            <button class="btn btn-xs btn-text" onclick="deleteTask('${task.id}')">×</button>
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                             <span class="time-badge">⏱ ${task.timeBlock}</span>
+                             <button class="btn btn-xs btn-secondary" onclick="editTask('${task.id}')">Edit</button>
+                        </div>
+                    `;
+                    cols[task.status].appendChild(el);
+                }
+            });
+
+            const countBadge = document.getElementById('todayCount');
+            countBadge.textContent = `${todayCount}/3`;
+            countBadge.className = todayCount >= 3 ? 'badge badge-red' : 'badge badge-green';
+        }
+
+        function checkTodayLimit(select) {
+            const warning = document.getElementById('todayLimitWarning');
+            if (select.value === 'Today') {
+                const todayTasks = dataManager.getData('tasks').filter(t => t.status === 'Today').length;
+                if (todayTasks >= 3 && !document.getElementById('taskForm').dataset.editId) {
+                    warning.classList.remove('hidden');
+                } else {
+                    warning.classList.add('hidden');
+                }
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev, id) {
+            ev.dataTransfer.setData("text", id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const id = ev.dataTransfer.getData("text");
+            const col = ev.target.closest('.task-column');
+            if (!col) return;
+
+            let newStatus;
+            if (col.querySelector('h3').textContent.includes('Today')) newStatus = 'Today';
+            else if (col.querySelector('h3').textContent.includes('Week')) newStatus = 'Week';
+            else newStatus = 'Backlog';
+
+            if (newStatus === 'Today') {
+                const todayTasks = dataManager.getData('tasks').filter(t => t.status === 'Today' && t.id !== id).length;
+                if (todayTasks >= 3) {
+                    showToast('Today is full! Clear a task first.', 'error');
+                    return;
+                }
+            }
+
+            const task = dataManager.getItemById('tasks', id);
+            if (task) {
+                task.status = newStatus;
+                dataManager.updateItem('tasks', id, task);
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('taskForm').reset();
+            delete document.getElementById('taskForm').dataset.editId;
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function editTask(id) {
+            const task = dataManager.getItemById('tasks', id);
+            if (!task) return;
+            const form = document.getElementById('taskForm');
+            form.dataset.editId = id;
+            form.elements.name.value = task.name;
+            form.elements.status.value = task.status;
+            form.elements.timeBlock.value = task.timeBlock;
+            form.elements.priority.value = task.priority;
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        async function deleteTask(id) {
+            if (await confirmDelete('Task done?')) {
+                dataManager.deleteItem('tasks', id);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

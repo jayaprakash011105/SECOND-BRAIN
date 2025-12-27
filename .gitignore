@@ -1,0 +1,10 @@
+*.crdownload
+{*.png
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+build/
+.env
+.vscode/
+.idea/

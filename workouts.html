@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workouts - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>🏋️ Workouts</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Log Workout</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card">
+                <div class="stat-value" id="weekWorkouts">0</div>
+                <div class="stat-label">This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalMins">0</div>
+                <div class="stat-label">Total Minutes</div>
+            </div>
+            <div class="stat-card" style="background: #e8f5e9; border: 1px solid #c8e6c9;">
+                <div class="stat-value text-success" id="sustainableScore">Good</div>
+                <div class="stat-label">Consistency Score</div>
+            </div>
+        </div>
+
+        <div class="rule-banner"
+            style="background:#e3f2fd; color: #1565c0; padding:12px; border-radius:6px; margin-bottom: 24px; text-align:center; font-weight:500;">
+            Minimum Rule: Even 20 minutes counts. Keep it sustainable.
+        </div>
+
+        <div id="workoutsContainer" class="item-list"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="workoutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Log Workout</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="workoutForm">
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="Strength">Strength</option>
+                        <option value="Cardio">Cardio</option>
+                        <option value="Mobility">Mobility</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration (Minutes)</label>
+                    <input type="number" name="duration" class="form-input" min="1" required>
+                    <small class="text-gray">Remember: > 20 mins is a win!</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Energy Level (After)</label>
+                    <select name="energy" class="form-select" required>
+                        <option value="High">High ⚡</option>
+                        <option value="Medium">Medium 😐</option>
+                        <option value="Low">Low 😴</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Weight/Reps)</label>
+                    <textarea name="notes" class="form-input" rows="2"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Log It</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderWorkouts();
+        });
+
+        function setupForm() {
+            const form = document.getElementById('workoutForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.duration = parseInt(data.duration);
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('workouts', form.dataset.editId, data);
+                    showToast('Update saved');
+                } else {
+                    dataManager.addItem('workouts', data);
+                    showToast('Workout logged! 💪');
+                }
+                closeModal();
+                renderWorkouts();
+            });
+        }
+
+        function renderWorkouts() {
+            const workouts = dataManager.getData('workouts').sort((a, b) => new Date(b.date) - new Date(a.date));
+            const container = document.getElementById('workoutsContainer');
+
+            // Stats logic
+            const now = new Date();
+            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+            let weekCount = 0;
+            let totalMins = 0;
+
+            workouts.forEach(w => {
+                totalMins += w.duration;
+                if (new Date(w.date) >= startOfWeek) weekCount++;
+            });
+
+            document.getElementById('weekWorkouts').textContent = weekCount;
+            document.getElementById('totalMins').textContent = totalMins;
+            document.getElementById('sustainableScore').textContent = weekCount >= 3 ? "Great! 🔥" : "Keep going";
+
+            if (workouts.length === 0) {
+                container.innerHTML = '<p class="text-center p-8">No workouts yet. Go move your body!</p>';
+                return;
+            }
+
+            let html = '';
+            workouts.forEach(w => {
+                let energyIcon = '😐';
+                if (w.energy === 'High') energyIcon = '⚡';
+                if (w.energy === 'Low') energyIcon = '😴';
+
+                html += `
+                    <div class="list-item">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="badge badge-blue" style="font-size:1.2rem; width:40px; height:40px; display:flex; justify-content:center; align-items:center;">
+                                    ${w.type === 'Strength' ? '🏋️' : (w.type === 'Cardio' ? '🏃' : '🧘')}
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1rem;">${w.type} &bull; ${w.duration} mins</h3>
+                                    <div class="text-sm text-gray">${w.date} &bull; Energy: ${energyIcon}</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-secondary btn-sm" onclick="editWorkout('${w.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteWorkout('${w.id}')">Del</button>
+                            </div>
+                        </div>
+                        ${w.notes ? `<div class="mt-2 text-sm bg-light p-2 rounded text-gray">${utils.escapeHtml(w.notes)}</div>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openAddModal() {
+            document.getElementById('workoutForm').reset();
+            delete document.getElementById('workoutForm').dataset.editId;
+            document.querySelector('input[name="date"]').valueAsDate = new Date();
+            document.getElementById('workoutModal').classList.add('active');
+        }
+
+        function editWorkout(id) {
+            const w = dataManager.getItemById('workouts', id);
+            if (!w) return;
+            const form = document.getElementById('workoutForm');
+            form.dataset.editId = id;
+            form.elements.type.value = w.type;
+            form.elements.duration.value = w.duration;
+            form.elements.energy.value = w.energy;
+            form.elements.date.value = w.date;
+            form.elements.notes.value = w.notes || '';
+            document.getElementById('workoutModal').classList.add('active');
+        }
+
+        function deleteWorkout(id) {
+            if (confirm('Delete workout?')) {
+                dataManager.deleteItem('workouts', id);
+                renderWorkouts();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('workoutModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

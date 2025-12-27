@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="page-container" style="animation: fadeIn var(--anim-duration) ease;">
+        <div class="page-header card-premium" style="padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+            <h1 style="margin: 0;">🎯 Goals</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Goal</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="view-controls">
+            <div class="view-tabs" id="viewTabs">
+                <button class="view-tab" data-view="year">🎯 2026 Goals</button>
+                <button class="view-tab" data-view="quarter">📅 Quarterly Goals</button>
+                <button class="view-tab" data-view="completed">✅ Completed</button>
+            </div>
+            <input type="text" id="searchInput" class="form-input search-box" placeholder="Search goals...">
+        </div>
+
+        <div id="goalsContainer"></div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="goalModal">
+        <div class="modal card-premium">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add Goal</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="goalForm">
+                <div class="form-group">
+                    <label class="form-label">Goal</label>
+                    <input type="text" name="goal" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select" required>
+                        <option value="">Select category</option>
+                        <option value="Career">Career</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Health">Health</option>
+                        <option value="Personal">Personal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Timeframe</label>
+                    <select name="timeframe" class="form-select" required>
+                        <option value="">Select timeframe</option>
+                        <option value="Year">Year</option>
+                        <option value="Quarter">Quarter</option>
+                        <option value="Month">Month</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select" required>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let currentView = 'year';
+        let searchQuery = '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupViewTabs();
+            setupSearch();
+            setupForm();
+            renderGoals();
+
+            // Real-time synchronization!
+            dataManager.onUpdate((db) => {
+                if (!db || db === 'goals') renderGoals();
+            });
+        });
+
+        function setupViewTabs() {
+            const tabs = document.querySelectorAll('.view-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentView = tab.dataset.view;
+                    renderGoals();
+                });
+            });
+            tabs[0]?.classList.add('active');
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', utils.debounce((e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderGoals();
+            }, 300));
+        }
+
+        function setupForm() {
+            const form = document.getElementById('goalForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('goals', form.dataset.editId, data);
+                    showToast('Goal updated successfully!');
+                } else {
+                    dataManager.addItem('goals', data);
+                    showToast('Goal added successfully!');
+                }
+
+                closeModal();
+            });
+        }
+
+        function renderGoals() {
+            let goals = dataManager.getData('goals');
+
+            // Filter by view
+            if (currentView === 'year') {
+                goals = goals.filter(g => g.timeframe === 'Year');
+            } else if (currentView === 'quarter') {
+                goals = goals.filter(g => g.timeframe === 'Quarter');
+            } else if (currentView === 'completed') {
+                goals = goals.filter(g => g.status === 'Done');
+            }
+
+            // Filter by search
+            if (searchQuery) {
+                goals = goals.filter(g =>
+                    g.goal?.toLowerCase().includes(searchQuery) ||
+                    g.category?.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            const container = document.getElementById('goalsContainer');
+
+            if (goals.length === 0) {
+                container.innerHTML = '<p class="text-center">No goals found. Add your first goal!</p>';
+                return;
+            }
+
+            let html = '<div class="item-list">';
+            goals.forEach(goal => {
+                html += `
+                    <div class="list-item">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 style="margin: 0; font-size: 1.125rem;">${utils.escapeHtml(goal.goal)}</h3>
+                            <div class="flex gap-1">
+                                <button class="btn btn-secondary" onclick="editGoal('${goal.id}')">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteGoal('${goal.id}')">Delete</button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2" style="flex-wrap: wrap;">
+                            ${statusBadge(goal.status)}
+                            ${priorityBadge(goal.priority)}
+                            ${createBadge(goal.category, 'status-not-started')}
+                            ${createBadge(goal.timeframe, 'status-not-started')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Goal';
+            document.getElementById('goalForm').reset();
+            delete document.getElementById('goalForm').dataset.editId;
+            document.getElementById('goalModal').classList.add('active');
+        }
+
+        function editGoal(id) {
+            const goal = dataManager.getItemById('goals', id);
+            if (!goal) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Goal';
+            const form = document.getElementById('goalForm');
+            form.dataset.editId = id;
+
+            form.elements.goal.value = goal.goal;
+            form.elements.category.value = goal.category;
+            form.elements.timeframe.value = goal.timeframe;
+            form.elements.status.value = goal.status;
+            form.elements.priority.value = goal.priority;
+
+            document.getElementById('goalModal').classList.add('active');
+        }
+
+        async function deleteGoal(id) {
+            if (await confirmDelete('Are you sure you want to delete this goal?')) {
+                dataManager.deleteItem('goals', id);
+                showToast('Goal deleted successfully!');
+                renderGoals();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('goalModal').classList.remove('active');
+            document.getElementById('goalForm').reset();
+            delete document.getElementById('goalForm').dataset.editId;
+        }
+    </script>
+</body>
+
+</html>

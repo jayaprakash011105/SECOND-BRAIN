@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchlist - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>🎥 Watchlist</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Content</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="rule-banner"
+            style="background:#fce7f3; color: #be185d; padding:12px; border-radius:6px; margin-bottom: 24px; text-align:center;">
+            <strong>Intentional Consumption:</strong> Learning or True Comfort. No doom scrolling.
+        </div>
+
+        <div class="grid-layout">
+            <div class="main-content">
+                <div class="view-controls mb-4">
+                    <button class="btn btn-sm" onclick="filterType('All')">All</button>
+                    <button class="btn btn-sm" onclick="filterType('Documentary')">Documentary</button>
+                    <button class="btn btn-sm" onclick="filterType('Educational')">Educational</button>
+                    <button class="btn btn-sm" onclick="filterType('Comfort')">Comfort Series</button>
+                </div>
+                <div id="watchlistContainer" class="item-list"></div>
+            </div>
+            <div class="sidebar">
+                <div class="card">
+                    <h3>Purpose Check</h3>
+                    <p class="text-sm text-gray">Before watching:</p>
+                    <ul class="text-sm">
+                        <li>Is this for learning?</li>
+                        <li>Is this a specific recharge?</li>
+                        <li>Or is it just noise?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="watchModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Content</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="watchForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="Documentary">Documentary</option>
+                        <option value="Educational">Educational YouTube</option>
+                        <option value="Comfort">Comfort Series</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purpose</label>
+                    <select name="purpose" class="form-select">
+                        <option value="Learn">🧠 Learn</option>
+                        <option value="Relax">🍵 Relax</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let currentFilter = 'All';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderWatchlist();
+        });
+
+        function setupForm() {
+            const form = document.getElementById('watchForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('watchlist', form.dataset.editId, data);
+                } else {
+                    dataManager.addItem('watchlist', data);
+                }
+                closeModal();
+                renderWatchlist();
+            });
+        }
+
+        function filterType(type) {
+            currentFilter = type;
+            renderWatchlist();
+        }
+
+        function renderWatchlist() {
+            let items = dataManager.getData('watchlist');
+            if (currentFilter !== 'All') {
+                items = items.filter(i => i.type === currentFilter);
+            }
+
+            const container = document.getElementById('watchlistContainer');
+            if (items.length === 0) {
+                container.innerHTML = '<p class="text-gray italic">Nothing to watch here yet.</p>';
+                return;
+            }
+
+            let html = '';
+            items.forEach(item => {
+                html += `
+                    <div class="list-item flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="badge ${item.purpose === 'Learn' ? 'badge-blue' : 'badge-green'}">${item.purpose}</span>
+                                <strong>${utils.escapeHtml(item.title)}</strong>
+                            </div>
+                            <div class="text-sm text-gray mt-1">${item.type}</div>
+                        </div>
+                        <div class="flex gap-2">
+                             <button class="btn btn-xs btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+                             <button class="btn btn-xs btn-danger" onclick="deleteItem('${item.id}')">Done</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function editItem(id) {
+            const item = dataManager.getItemById('watchlist', id);
+            if (!item) return;
+            const form = document.getElementById('watchForm');
+            form.dataset.editId = id;
+            form.elements.title.value = item.title;
+            form.elements.type.value = item.type;
+            form.elements.purpose.value = item.purpose;
+            document.getElementById('watchModal').classList.add('active');
+        }
+
+        function deleteItem(id) {
+            if (confirm('Finished watching?')) {
+                dataManager.deleteItem('watchlist', id);
+                renderWatchlist();
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('watchForm').reset();
+            delete document.getElementById('watchForm').dataset.editId;
+            document.getElementById('watchModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('watchModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

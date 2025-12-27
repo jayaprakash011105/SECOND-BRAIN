@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>📈 Performance</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Log Metric</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            <div class="main-content">
+                <div class="card mb-4">
+                    <h3>Mood & Energy Trends</h3>
+                    <canvas id="trendChart" height="200"></canvas>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Logs</h3>
+                    <div id="logsContainer" class="item-list"></div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="card">
+                    <h3>🧠 Focus Mode</h3>
+                    <p class="text-gray text-sm mb-4">Tracking mental sharpness over body obsession.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="metricModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Log Metric</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="metricForm">
+                <div class="form-group">
+                    <label class="form-label">Metric Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="Mood">Mood (1-10)</option>
+                        <option value="Energy">Energy (1-10)</option>
+                        <option value="Weight">Weight (kg)</option>
+                        <option value="Stamina">Stamina (min running/etc)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Value</label>
+                    <input type="number" name="value" class="form-input" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-input" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Log Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let chartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderLogs();
+        });
+
+        function setupForm() {
+            const form = document.getElementById('metricForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.value = parseFloat(data.value);
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('metrics', form.dataset.editId, data);
+                } else {
+                    dataManager.addItem('metrics', data);
+                }
+                closeModal();
+                renderLogs();
+                showToast('Metric logged');
+            });
+        }
+
+        function renderLogs() {
+            const metrics = dataManager.getData('metrics').sort((a, b) => new Date(b.date) - new Date(a.date));
+            const container = document.getElementById('logsContainer');
+
+            // Render List
+            let html = '';
+            metrics.slice(0, 10).forEach(m => { // Show last 10
+                html += `
+                    <div class="list-item flex justify-between items-center">
+                        <div>
+                             <strong>${m.type}</strong>: ${m.value}
+                             <div class="text-xs text-gray">${m.date}</div>
+                        </div>
+                        <button class="btn btn-xs btn-text text-danger" onclick="deleteMetric('${m.id}')">×</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html || '<p class="text-gray text-sm">No data logged.</p>';
+
+            renderChart(metrics);
+        }
+
+        function renderChart(metrics) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+
+            // Group by date
+            // Simple logic: Filter for Mood/Energy only
+            const chartData = metrics.filter(m => ['Mood', 'Energy'].includes(m.type)).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // We need datasets for Mood and Energy
+            const dates = [...new Set(chartData.map(m => m.date))]; // Unique dates
+
+            // Helper to find value for date/type
+            const getValue = (date, type) => {
+                const found = chartData.find(m => m.date === date && m.type === type);
+                return found ? found.value : null;
+            };
+
+            const moodData = dates.map(d => getValue(d, 'Mood'));
+            const energyData = dates.map(d => getValue(d, 'Energy'));
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Mood',
+                            data: moodData,
+                            borderColor: '#8b5cf6',
+                            tension: 0.4,
+                            spanGaps: true
+                        },
+                        {
+                            label: 'Energy',
+                            data: energyData,
+                            borderColor: '#f59e0b',
+                            tension: 0.4,
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 10 }
+                    }
+                }
+            });
+        }
+
+        function openAddModal() {
+            document.getElementById('metricForm').reset();
+            document.querySelector('input[name="date"]').valueAsDate = new Date();
+            delete document.getElementById('metricForm').dataset.editId;
+            document.getElementById('metricModal').classList.add('active');
+        }
+
+        function deleteMetric(id) {
+            if (confirm('Delete metric?')) {
+                dataManager.deleteItem('metrics', id);
+                renderLogs();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('metricModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .notes-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .folder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .folder-btn {
+            text-align: left;
+            padding: 10px 16px;
+            border-radius: 6px;
+            background: none;
+            border: 1px solid transparent;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .folder-btn:hover {
+            background: #f0f0f0;
+            color: var(--color-text-primary);
+        }
+
+        .folder-btn.active {
+            background: #e8ecf4;
+            color: var(--color-primary);
+            border-color: rgba(74, 144, 226, 0.2);
+        }
+
+        .note-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .golden-rule {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container" style="animation: fadeIn var(--anim-duration) ease;">
+        <div class="page-header card-premium" style="padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+            <h1 style="margin: 0;">📝 Notes</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ New Note</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="notes-layout">
+            <aside class="sidebar card-premium" style="padding: 20px; border-radius: 12px;">
+                <nav class="folder-list">
+                    <button class="folder-btn active" onclick="filterNotes('All')">📂 All Notes</button>
+                    <button class="folder-btn" onclick="filterNotes('Ideas')">💡 Ideas</button>
+                    <button class="folder-btn" onclick="filterNotes('Learnings')">📚 Learnings</button>
+                    <button class="folder-btn" onclick="filterNotes('Mistakes')">⚠️ Mistakes</button>
+                    <button class="folder-btn" onclick="filterNotes('Reference')">📌 Reference</button>
+                </nav>
+
+                <div class="golden-rule">
+                    <strong>Golden Rule:</strong><br>
+                    Notes should serve projects, not collect dust.
+                </div>
+            </aside>
+
+            <main>
+                <input type="text" id="searchInput" class="form-input mb-4" placeholder="Search notes...">
+                <div id="notesContainer"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="noteModal">
+        <div class="modal card-premium" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Note</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="noteForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-input" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Folder</label>
+                    <select name="folder" class="form-select" required>
+                        <option value="Ideas">Ideas</option>
+                        <option value="Learnings">Learnings</option>
+                        <option value="Mistakes">Mistakes</option>
+                        <option value="Reference">Reference</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea name="content" class="form-input" rows="8" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let currentFolder = 'All';
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSearch();
+            setupForm();
+            renderNotes();
+
+            // Real-time synchronization!
+            dataManager.onUpdate((db) => {
+                if (!db || db === 'notes') renderNotes();
+            });
+        });
+
+        function setupSearch() {
+            document.getElementById('searchInput').addEventListener('input', utils.debounce((e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderNotes();
+            }, 300));
+        }
+
+        function filterNotes(folder) {
+            currentFolder = folder;
+            document.querySelectorAll('.folder-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(folder));
+            });
+            renderNotes();
+        }
+
+        function setupForm() {
+            const form = document.getElementById('noteForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.date = new Date().toISOString().split('T')[0];
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('notes', form.dataset.editId, data);
+                    showToast('Note updated');
+                } else {
+                    dataManager.addItem('notes', data);
+                    showToast('Note created');
+                }
+                closeModal();
+            });
+        }
+
+        function renderNotes() {
+            let notes = dataManager.getData('notes');
+
+            if (currentFolder !== 'All') {
+                notes = notes.filter(n => n.folder === currentFolder);
+            }
+
+            if (searchQuery) {
+                notes = notes.filter(n =>
+                    n.title.toLowerCase().includes(searchQuery) ||
+                    n.content.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            const container = document.getElementById('notesContainer');
+            if (notes.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray p-8">No notes found. Create one!</div>';
+                return;
+            }
+
+            let html = '';
+            notes.forEach(note => {
+                const preview = note.content.length > 150 ? note.content.substring(0, 150) + '...' : note.content;
+                html += `
+                    <div class="note-card" onclick="editNote('${note.id}')">
+                         <div class="flex justify-between items-start mb-2">
+                            <h3 style="margin: 0; font-size: 1.1rem;">${utils.escapeHtml(note.title)}</h3>
+                            <span class="badge badge-gray text-xs">${note.folder}</span>
+                        </div>
+                        <p class="text-gray mb-3" style="font-size: 0.95rem; line-height: 1.5;">${utils.escapeHtml(preview)}</p>
+                        <div class="flex justify-between items-center text-sm text-gray bg-light p-2 rounded">
+                            <span>📅 ${note.date}</span>
+                            <button class="btn btn-xs btn-danger" onclick="event.stopPropagation(); deleteNote('${note.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openAddModal() {
+            document.getElementById('noteForm').reset();
+            delete document.getElementById('noteForm').dataset.editId;
+            document.getElementById('noteModal').classList.add('active');
+        }
+
+        function editNote(id) {
+            const note = dataManager.getItemById('notes', id);
+            if (!note) return;
+            const form = document.getElementById('noteForm');
+            form.dataset.editId = id;
+            form.elements.title.value = note.title;
+            form.elements.folder.value = note.folder;
+            form.elements.content.value = note.content;
+            document.getElementById('noteModal').classList.add('active');
+        }
+
+        async function deleteNote(id) {
+            if (await confirmDelete('Delete this note?')) {
+                dataManager.deleteItem('notes', id);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('noteModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

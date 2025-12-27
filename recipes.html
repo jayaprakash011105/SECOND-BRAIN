@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>🍳 Recipe Library</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ New Recipe</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="view-controls mb-4">
+            <button class="btn btn-sm" onclick="filterType('All')">All</button>
+            <button class="btn btn-sm" onclick="filterType('Quick')">⚡ Quick Meal</button>
+            <button class="btn btn-sm" onclick="filterType('Healthy')">🥗 Healthy</button>
+            <button class="btn btn-sm" onclick="filterType('Comfort')">🍲 Comfort</button>
+        </div>
+
+        <div id="recipeContainer" class="grid-layout"
+            style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="recipeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">New Recipe</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="recipeForm">
+                <div class="form-group">
+                    <label class="form-label">Recipe Name</label>
+                    <input type="text" name="name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="Quick">⚡ Quick</option>
+                        <option value="Healthy">🥗 Healthy</option>
+                        <option value="Comfort">🍲 Comfort</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ingredients</label>
+                    <textarea name="ingredients" class="form-input" rows="4"
+                        placeholder="List ingredients..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Chef</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        let currentFilter = 'All';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderRecipes();
+        });
+
+        function filterType(type) {
+            currentFilter = type;
+            renderRecipes();
+        }
+
+        function setupForm() {
+            const form = document.getElementById('recipeForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('recipes', form.dataset.editId, data);
+                } else {
+                    dataManager.addItem('recipes', data);
+                }
+                closeModal();
+                renderRecipes();
+                showToast('Recipe saved!');
+            });
+        }
+
+        function renderRecipes() {
+            let recipes = dataManager.getData('recipes');
+            if (currentFilter !== 'All') {
+                recipes = recipes.filter(r => r.type === currentFilter);
+            }
+
+            const container = document.getElementById('recipeContainer');
+            if (recipes.length === 0) {
+                container.innerHTML = '<p class="text-gray col-span-full text-center">No recipes found. Start cooking!</p>';
+                return;
+            }
+
+            let html = '';
+            recipes.forEach(r => {
+                const ingredients = (r.ingredients || '').split('\n').map(i => `<li>${utils.escapeHtml(i)}</li>`).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3>${utils.escapeHtml(r.name)}</h3>
+                            <span class="badge badge-gray">${r.type}</span>
+                        </div>
+                        <ul class="text-sm text-gray pl-4 mb-4">
+                            ${ingredients}
+                        </ul>
+                         <div class="flex gap-2">
+                             <button class="btn btn-xs btn-secondary w-full" onclick="editRecipe('${r.id}')">Edit</button>
+                             <button class="btn btn-xs btn-danger w-full" onclick="deleteRecipe('${r.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function editRecipe(id) {
+            const r = dataManager.getItemById('recipes', id);
+            if (!r) return;
+            const form = document.getElementById('recipeForm');
+            form.dataset.editId = id;
+            form.elements.name.value = r.name;
+            form.elements.type.value = r.type;
+            form.elements.ingredients.value = r.ingredients;
+            document.getElementById('recipeModal').classList.add('active');
+        }
+
+        function deleteRecipe(id) {
+            if (confirm('Delete recipe?')) {
+                dataManager.deleteItem('recipes', id);
+                renderRecipes();
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('recipeForm').reset();
+            delete document.getElementById('recipeForm').dataset.editId;
+            document.getElementById('recipeModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

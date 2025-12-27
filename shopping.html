@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>🛒 Shopping Lists</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Item</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            <!-- Essentials -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>🧼 Essentials</h3>
+                    <button class="btn btn-xs" onclick="clearBought('Essentials')">Clear Bought</button>
+                </div>
+                <div id="list-Essentials" class="item-list-small"></div>
+            </div>
+
+            <!-- Monthly -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>📅 Monthly Buys</h3>
+                    <button class="btn btn-xs" onclick="clearBought('Monthly')">Clear Bought</button>
+                </div>
+                <div id="list-Monthly" class="item-list-small"></div>
+            </div>
+
+            <!-- Wants -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>🎁 Wants</h3>
+                    <button class="btn btn-xs" onclick="clearBought('Wants')">Clear Bought</button>
+                </div>
+                <div id="list-Wants" class="item-list-small"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" id="shopModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Item</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="shopForm">
+                <div class="form-group">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" name="name" class="form-input" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">List Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="Essentials">Essentials (Food/Hygiene)</option>
+                        <option value="Monthly">Monthly Restock</option>
+                        <option value="Wants">Wants (Gadgets/Decor)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cost (Est.)</label>
+                    <input type="number" name="cost" class="form-input" step="0.01">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add to List</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderLists();
+        });
+
+        function setupForm() {
+            const form = document.getElementById('shopForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.bought = false;
+
+                if (form.dataset.editId) {
+                    dataManager.updateItem('shopping', form.dataset.editId, data);
+                } else {
+                    dataManager.addItem('shopping', data);
+                }
+                closeModal();
+                renderLists();
+            });
+        }
+
+        function renderLists() {
+            const items = dataManager.getData('shopping');
+            const lists = {
+                'Essentials': document.getElementById('list-Essentials'),
+                'Monthly': document.getElementById('list-Monthly'),
+                'Wants': document.getElementById('list-Wants')
+            };
+
+            Object.values(lists).forEach(el => el.innerHTML = '');
+
+            items.forEach(item => {
+                if (lists[item.type]) {
+                    const el = document.createElement('div');
+                    el.className = 'flex items-center gap-2 p-2 border-b border-light';
+                    el.style.opacity = item.bought ? '0.5' : '1';
+
+                    el.innerHTML = `
+                        <input type="checkbox" ${item.bought ? 'checked' : ''} onchange="toggleBought('${item.id}')">
+                        <span style="text-decoration: ${item.bought ? 'line-through' : 'none'}; flex:1;">${utils.escapeHtml(item.name)}</span>
+                        <span class="text-sm text-gray">$${item.cost || '-'}</span>
+                        <button class="btn btn-xs btn-text text-danger" onclick="deleteItem('${item.id}')">×</button>
+                    `;
+                    lists[item.type].appendChild(el);
+                }
+            });
+
+            Object.keys(lists).forEach(key => {
+                if (lists[key].children.length === 0) lists[key].innerHTML = '<p class="text-sm text-gray p-2">Empty list</p>';
+            });
+        }
+
+        function toggleBought(id) {
+            const item = dataManager.getItemById('shopping', id);
+            item.bought = !item.bought;
+            dataManager.updateItem('shopping', id, item);
+            renderLists();
+        }
+
+        function clearBought(type) {
+            if (confirm(`Remove bought items from ${type}?`)) {
+                const items = dataManager.getData('shopping');
+                items.forEach(item => {
+                    if (item.type === type && item.bought) {
+                        dataManager.deleteItem('shopping', item.id);
+                    }
+                });
+                renderLists();
+            }
+        }
+
+        function deleteItem(id) {
+            dataManager.deleteItem('shopping', id);
+            renderLists();
+        }
+
+        function openAddModal() {
+            document.getElementById('shopForm').reset();
+            delete document.getElementById('shopForm').dataset.editId;
+            document.getElementById('shopModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('shopModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

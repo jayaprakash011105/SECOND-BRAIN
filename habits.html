@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habits - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .habits-container {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* Updated Habits Sidebar Styles */
+        .habits-sidebar-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            width: 300px;
+        }
+
+        .today-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: #ffffff;
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            width: fit-content;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .habits-sidebar {
+            width: 100%;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+            padding: 0 4px;
+        }
+
+        .sidebar-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .sidebar-icon {
+            background: #4a90e2;
+            color: white;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--color-text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .icon-button:hover {
+            color: var(--color-text-primary);
+        }
+
+        .habits-sidebar h3 {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            margin: 0 0 var(--spacing-md) 0;
+        }
+
+        .habit-item-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 4px;
+            margin-bottom: 4px;
+            transition: background 0.2s;
+            border-radius: 4px;
+        }
+
+        .habit-item-container:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .habit-item-container:hover .habit-item-actions {
+            opacity: 1;
+        }
+
+        .habit-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        /* Removed old .habit-item:hover as it is now on container */
+
+        .habit-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+            appearance: none;
+            -webkit-appearance: none;
+            position: relative;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .habit-checkbox:checked {
+            background: #4a90e2;
+            border-color: #4a90e2;
+        }
+
+        .habit-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .habit-icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .habit-name {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #333;
+            font-weight: 400;
+        }
+
+        .habit-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .habit-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px;
+            opacity: 0.6;
+        }
+
+        .habit-action-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .habit-action-btn.delete:hover {
+            filter: grayscale(0) !important;
+        }
+
+        .habit-percentage {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            font-weight: 600;
+        }
+
+        .overall-progress {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .overall-progress-label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text-primary);
+        }
+
+        .progress-stat {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .overall-progress-bar {
+            height: 6px;
+            background: #eef0f2;
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .overall-progress-fill {
+            height: 100%;
+            background: #4caf50;
+            /* Solid green like reference */
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .chart-area {
+            flex: 1;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            min-height: 400px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .chart-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 300px;
+            position: relative;
+        }
+
+        .statistics-section {
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .stats-title {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+
+        .stats-table th {
+            background: var(--color-bg-card);
+            padding: var(--spacing-sm);
+            text-align: left;
+            font-weight: 600;
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .stats-table td {
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--color-border);
+            font-size: var(--font-size-sm);
+        }
+
+        .stats-table tr:hover {
+            background: var(--color-bg-card);
+        }
+
+        .progress-cell {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .progress-bar-small {
+            flex: 1;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill-small {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+        }
+
+        .checkbox-cell {
+            text-align: center;
+        }
+
+        .table-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--color-accent);
+        }
+
+        .add-habit-btn {
+            width: 100%;
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background: transparent;
+            border: 1px dashed var(--color-border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+
+        .add-habit-btn:hover {
+            background: var(--color-bg-card);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        /* Habit Category Styles */
+        .habit-category {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .habit-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .habit-category-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .habit-category-add {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--color-accent);
+            background: transparent;
+            color: var(--color-accent);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            padding: 0;
+            line-height: 1;
+        }
+
+        .habit-category-add:hover {
+            background: var(--color-accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .habit-category-empty {
+            color: var(--color-text-secondary);
+            font-size: 0.85rem;
+            font-style: italic;
+            padding: var(--spacing-sm) 0;
+            text-align: center;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: var(--radius-md);
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+
+        @media (max-width: 992px) {
+            .habits-container {
+                flex-direction: column;
+            }
+
+            .habits-sidebar-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container" style="animation: fadeIn var(--anim-duration) ease;">
+        <div class="page-header card-premium" style="padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+            <h1 style="margin: 0;">HABITS</h1>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ New</button>
+                <a href="index.html" class="back-button">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="habits-container">
+            <!-- Left Sidebar: Habits List -->
+            <div class="habits-sidebar-container">
+                <div class="today-header">
+                    <span>📅 Today</span>
+                </div>
+                <div class="habits-sidebar card-premium">
+                    <div class="sidebar-header">
+                        <span class="sidebar-title">
+                            <div class="sidebar-icon">🔄</div> Habitudes
+                        </span>
+                    </div>
+                    <div id="habitsList">
+                        <!-- Habits will be rendered here -->
+                    </div>
+                    <div class="overall-progress" id="overallProgress">
+                        <!-- Overall progress will be rendered here -->
+                    </div>
+                    <button class="add-habit-btn" onclick="openAddModal()">+ New page</button>
+
+                </div>
+            </div>
+
+            <!-- Center: Progress Chart -->
+            <div class="chart-area card-premium">
+                <div class="chart-header">
+                    <span class="chart-title">📈 Progress</span>
+                </div>
+                <div class="chart-canvas">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Statistics Table -->
+        <div class="statistics-section card-premium">
+            <div class="stats-header">
+                <div style="display: flex; gap: var(--spacing-md); align-items: center;">
+                    <span class="stats-title">📊 Statistics</span>
+                    <select id="statsViewSelect" class="form-select"
+                        style="width: auto; padding: 4px 8px; font-size: 0.875rem;"
+                        onchange="changeStatsView(this.value)">
+                        <option value="7">Weekly (7 Days)</option>
+                        <option value="30">Monthly (30 Days)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">+ New</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="stats-table" id="statsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Success rate</th>
+                            <th class="checkbox-cell">Wake up at 7am</th>
+                            <th class="checkbox-cell">Cold shower</th>
+                            <th class="checkbox-cell">Deep work</th>
+                            <th class="checkbox-cell">In bed before...</th>
+                            <th class="checkbox-cell">Workout</th>
+                            <th class="checkbox-cell">Meditation</th>
+                            <th class="checkbox-cell">Stretching</th>
+                            <th class="checkbox-cell">Read 10 pages</th>
+                            <th class="checkbox-cell">Health...</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody">
+                        <!-- Stats rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="habitModal">
+        <div class="modal card-premium">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add Habit</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="habitForm">
+                <div class="form-group">
+                    <label class="form-label">Habit Name</label>
+                    <input type="text" name="habitName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="">Select time of day</option>
+                        <option value="Morning">Morning Routine</option>
+                        <option value="Afternoon">Afternoon</option>
+                        <option value="Evening">Evening Routine</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Habit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Get date string for comparison
+        function getDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // Get last N days
+        function getLastNDays(n) {
+            const days = [];
+            for (let i = n - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                days.push(date);
+            }
+            return days;
+        }
+
+        // Calculate success rate
+        function calculateSuccessRate(habit, days = 7) {
+            if (!habit.completionDates || habit.completionDates.length === 0) return 0;
+            const lastDays = getLastNDays(days);
+            const completedDays = lastDays.filter(day => {
+                const dateStr = getDateString(day);
+                return habit.completionDates.includes(dateStr);
+            }).length;
+            return Math.round((completedDays / days) * 100);
+        }
+
+        // Check if habit is done on specific date
+        function isHabitDoneOnDate(habit, dateStr) {
+            return habit.completionDates && habit.completionDates.includes(dateStr);
+        }
+
+        // Toggle habit completion for today
+        function toggleHabitToday(habitId) {
+            const habit = dataManager.getItemById('habits', habitId);
+            if (!habit) return;
+
+            const today = getDateString(new Date());
+            let completionDates = habit.completionDates || [];
+
+            if (completionDates.includes(today)) {
+                completionDates = completionDates.filter(d => d !== today);
+            } else {
+                completionDates.push(today);
+            }
+
+            dataManager.updateItem('habits', habitId, { completionDates });
+        }
+
+        // Toggle habit for specific date
+        // Get emoji for habit based on name
+        function getHabitEmoji(habitName) {
+            const name = habitName.toLowerCase();
+            if (name.includes('wake') || name.includes('7am')) return '⏰';
+            if (name.includes('meditation')) return '🧘';
+            if (name.includes('stretch')) return '😊';
+            if (name.includes('cold') || name.includes('shower')) return '❄️';
+            if (name.includes('deep') || name.includes('work')) return '🎯';
+            if (name.includes('healthy') || name.includes('lunch')) return '🥗';
+            if (name.includes('workout')) return '💪';
+            if (name.includes('dinner')) return '🍽️';
+            if (name.includes('read') || name.includes('pages')) return '📖';
+            if (name.includes('bed') || name.includes('midnight')) return '🌙';
+            return '✅';
+        }
+
+        // Render habits sidebar organized by time of day
+        function renderHabitsList() {
+            const allHabits = dataManager.getData('habits');
+            const container = document.getElementById('habitsList');
+
+            // Map habits to categories and filter out any that don't belong (if any)
+            // Including legacy types to ensure no habit is lost
+            const morningHabits = allHabits.filter(h => h.type === 'Morning' || h.type === 'Mind');
+            const afternoonHabits = allHabits.filter(h => h.type === 'Afternoon' || h.type === 'Skill');
+            const eveningHabits = allHabits.filter(h => h.type === 'Evening' || h.type === 'Body' || h.type === 'Money');
+
+            // Total habits that are actually displayed
+            const displayedHabits = [...morningHabits, ...afternoonHabits, ...eveningHabits];
+
+            let html = '';
+            let totalCompleted = 0;
+            const today = getDateString(new Date());
+
+            // Helper function to render a category
+            function renderCategory(categoryName, categoryHabits, categoryType) {
+                let categoryHtml = `
+                    <div class="habit-category">
+                        <div class="habit-category-header">
+                            <span class="habit-category-title">${categoryName}</span>
+                            <button class="habit-category-add" onclick="openAddModalForCategory('${categoryType}')" title="Add ${categoryName} Habit">+</button>
+                        </div>
+                `;
+
+                if (categoryHabits.length === 0) {
+                    categoryHtml += `<div class="habit-category-empty">No ${categoryName.toLowerCase()} habits yet</div>`;
+                } else {
+                    categoryHabits.forEach(habit => {
+                        const isDoneToday = isHabitDoneOnDate(habit, today);
+                        const emoji = getHabitEmoji(habit.habitName || habit.habit);
+
+                        if (isDoneToday) totalCompleted++;
+
+                        categoryHtml += `
+                            <div class="habit-item-container">
+                                <div class="habit-item">
+                                    <input type="checkbox" 
+                                        class="habit-checkbox" 
+                                        ${isDoneToday ? 'checked' : ''}
+                                        onchange="toggleHabitToday('${habit.id}')">
+                                    <span class="habit-icon">${emoji}</span>
+                                    <span class="habit-name">${utils.escapeHtml(habit.habitName || habit.habit)}</span>
+                                </div>
+                                <div class="habit-item-actions">
+                                    <button class="habit-action-btn" onclick="editHabit('${habit.id}', event)" title="Edit">📝</button>
+                                    <button class="habit-action-btn delete" onclick="deleteHabit('${habit.id}', event)" title="Delete">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                categoryHtml += `</div>`;
+                return categoryHtml;
+            }
+
+            // Render all categories
+            html += renderCategory('Morning Routine', morningHabits, 'Morning');
+            html += renderCategory('Afternoon', afternoonHabits, 'Afternoon');
+            html += renderCategory('Evening Routine', eveningHabits, 'Evening');
+
+            container.innerHTML = html;
+
+            // Render overall progress based ONLY on displayed habits
+            const overallPercentage = displayedHabits.length > 0 ? Math.round((totalCompleted / displayedHabits.length) * 100) : 0;
+            document.getElementById('overallProgress').innerHTML = `
+                <span class="progress-stat">${overallPercentage}%</span>
+                <div class="overall-progress-bar">
+                    <div class="overall-progress-fill" style="width: ${overallPercentage}%"></div>
+                </div>
+            `;
+        }
+
+        // Chart Instance
+        let progressChartInstance = null;
+        let currentStatsDuration = 7;
+
+        function changeStatsView(days) {
+            currentStatsDuration = parseInt(days);
+            renderStatsTable();
+            renderProgressChart();
+        }
+
+        // Render Progress Chart
+        function renderProgressChart() {
+            const ctx = document.getElementById('progressChart');
+            if (!ctx) return;
+
+            const habits = dataManager.getData('habits');
+            // Use currentStatsDuration for chart too, or stick to 7? 
+            // Usually progress charts are better if matching the table view or fixed. 
+            // Let's stick to 7 for the chart for now to keep it clean, or update it?
+            // User asked for "statistics section" to be weekly or monthly.
+            // The chart is "Progress", the table is "Statistics".
+            // Let's keep Chart at 7 days for readability unless requested, 
+            // but the table will definitely adapt.
+
+            const last7Days = getLastNDays(7).reverse();
+
+            const labels = last7Days.map(d => d.toLocaleDateString('en-US', { weekday: 'short' }));
+            const data = last7Days.map(day => {
+                const dayHabits = habits.filter(h =>
+                    h.type === 'Morning' || h.type === 'Mind' ||
+                    h.type === 'Afternoon' || h.type === 'Skill' ||
+                    h.type === 'Evening' || h.type === 'Body' || h.type === 'Money'
+                );
+                if (dayHabits.length === 0) return 0;
+                const dateStr = getDateString(day);
+                const completedCount = dayHabits.filter(h => isHabitDoneOnDate(h, dateStr)).length;
+                return Math.round((completedCount / dayHabits.length) * 100);
+            });
+
+            if (progressChartInstance) {
+                progressChartInstance.destroy();
+            }
+
+            // Create gradient
+            const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(74, 144, 226, 0.5)');
+            gradient.addColorStop(1, 'rgba(74, 144, 226, 0.0)');
+
+            progressChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Completion Rate',
+                        data: data,
+                        borderColor: '#4a90e2',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#4a90e2',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e1e1e',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 10,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.parsed.y + '% Completed';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { borderDash: [2, 4], color: '#f0f0f0' },
+                            ticks: { callback: function (value) { return value + '%' } }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render statistics table
+        function renderStatsTable() {
+            const habits = dataManager.getData('habits');
+            const tbody = document.getElementById('statsTableBody');
+
+            // Use dynamic duration
+            // Reverse so TODAY is at the TOP (or standard table order?)
+            // Usually logs are Date DESC (Today first). 
+            // My previous implementation was getLastNDays (oldest first).
+            // Let's reverse it so Today is readily visible at top.
+            const statsDays = getLastNDays(currentStatsDuration).reverse();
+
+            if (habits.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 2rem;">No habits to display</td></tr>';
+                return;
+            }
+
+            let html = '';
+            statsDays.forEach(day => {
+                const dateStr = getDateString(day);
+                const dayHabits = habits.filter(h =>
+                    h.type === 'Morning' || h.type === 'Mind' ||
+                    h.type === 'Afternoon' || h.type === 'Skill' ||
+                    h.type === 'Evening' || h.type === 'Body' || h.type === 'Money'
+                );
+
+                const completedCount = dayHabits.filter(h => isHabitDoneOnDate(h, dateStr)).length;
+                const percentage = dayHabits.length > 0 ? Math.round((completedCount / dayHabits.length) * 100) : 0;
+
+                html += `
+                    <tr>
+                        <td style="font-weight: 500;">User</td>
+                        <td>${day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                        <td>
+                            <div class="progress-cell">
+                                <div class="progress-bar-small">
+                                    <div class="progress-fill-small" style="width: ${percentage}%"></div>
+                                </div>
+                                <span>${percentage}%</span>
+                            </div>
+                        </td>
+                        ${habits.map(habit => `
+                            <td class="checkbox-cell">
+                                <input type="checkbox" 
+                                    class="table-checkbox" 
+                                    ${isHabitDoneOnDate(habit, dateStr) ? 'checked' : ''}
+                                    onchange="toggleHabitForDate('${habit.id}', '${dateStr}')">
+                            </td>
+                        `).join('')}
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Toggle habit for specific date
+        function toggleHabitForDate(habitId, dateStr) {
+            const habit = dataManager.getItemById('habits', habitId);
+            if (!habit) return;
+
+            let completionDates = habit.completionDates || [];
+
+            if (completionDates.includes(dateStr)) {
+                completionDates = completionDates.filter(d => d !== dateStr);
+            } else {
+                completionDates.push(dateStr);
+            }
+
+            dataManager.updateItem('habits', habitId, { completionDates });
+        }
+
+        // Modal Functions
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'Add Habit';
+            document.getElementById('habitForm').reset();
+            document.getElementById('habitForm').onsubmit = handleAddHabit;
+            document.getElementById('habitModal').classList.add('active');
+        }
+
+        function openAddModalForCategory(category) {
+            openAddModal();
+            document.querySelector('select[name="type"]').value = category;
+        }
+
+        function closeModal() {
+            document.getElementById('habitModal').classList.remove('active');
+        }
+
+        function handleAddHabit(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newHabit = {
+                habitName: formData.get('habitName'),
+                type: formData.get('type'),
+                completionDates: []
+            };
+            dataManager.addItem('habits', newHabit);
+            closeModal();
+        }
+
+        function editHabit(id, e) {
+            e.stopPropagation();
+            const habit = dataManager.getItemById('habits', id);
+            if (!habit) return;
+
+            document.getElementById('modalTitle').innerText = 'Edit Habit';
+            const form = document.getElementById('habitForm');
+            form.habitName.value = habit.habitName || habit.habit;
+            form.type.value = habit.type;
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                dataManager.updateItem('habits', id, {
+                    habitName: form.habitName.value,
+                    type: form.type.value
+                });
+                closeModal();
+            };
+
+            document.getElementById('habitModal').classList.add('active');
+        }
+
+        function deleteHabit(id, e) {
+            e.stopPropagation();
+            if (confirm('Are you sure you want to delete this habit?')) {
+                dataManager.deleteItem('habits', id);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHabitsList();
+            renderStatsTable();
+            renderProgressChart();
+
+            // Listen for data changes
+            window.addEventListener('dataUpdated', (e) => {
+                if (e.detail.storeName === 'habits') {
+                    renderHabitsList();
+                    renderStatsTable();
+                    renderProgressChart();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

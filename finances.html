@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finances - Second Brain</title>
+    <link rel="stylesheet" href="styles.css?v=solid">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="page-container" style="max-width: 1200px; animation: fadeIn var(--anim-duration) ease;">
+        <div class="page-header card-premium"
+            style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 2.5rem;">💵</div>
+                <h1 style="margin: 0; font-size: 1.5rem;">Finances</h1>
+            </div>
+            <div class="flex gap-2">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Entry</button>
+                <a href="index.html" class="btn btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <h3 style="color: #4b5563; font-weight: 600;">📚 Categories</h3>
+
+        </div>
+
+        <!-- 5x2 Grid -->
+        <div class="finance-grid" id="finance-grid">
+            <!-- Cards injected by JS -->
+        </div>
+
+        <div class="finance-bottom-section">
+            <div class="chart-container card-premium">
+                <canvas id="financeRadar"></canvas>
+            </div>
+
+            <div class="month-list card-premium">
+                <div class="flex items-center gap-2 mb-4" style="color: #4b5563; font-weight: 600;">
+                    <span>📅</span> By month
+                </div>
+                <div id="monthListContainer">
+                    <!-- History injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal (Same as before but simplified) -->
+    <div class="modal-overlay" id="financeModal">
+        <div class="modal card-premium">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Entry</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="financeForm">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select" required>
+                        <option value="Salary">Salary</option>
+                        <option value="Rent">Rent</option>
+                        <option value="Taxes">Taxes</option>
+                        <option value="Investments">Investments</option>
+                        <option value="Food">Food</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Health">Health</option>
+                        <option value="Transports">Transports</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Entertainment">Entertainment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Entry Name</label>
+                    <input type="text" name="name" class="form-input" required placeholder="e.g. Monthly Paycheck">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount ($)</label>
+                    <input type="number" name="amount" class="form-input" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select" required>
+                        <option value="Income">Income (+)</option>
+                        <option value="Expense">Expense (-)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-input" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        const FIXED_CATEGORIES = [
+            { name: 'Salary', icon: '💵' },
+            { name: 'Rent', icon: '🏠' },
+            { name: 'Taxes', icon: '🏛️' },
+            { name: 'Investments', icon: '📈' },
+            { name: 'Food', icon: '🍴' },
+            { name: 'Shopping', icon: '🛍️' },
+            { name: 'Health', icon: '❤️' },
+            { name: 'Transports', icon: '🚌' },
+            { name: 'Bills', icon: '🔌' },
+            { name: 'Entertainment', icon: '🎬' }
+        ];
+
+        let chartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupForm();
+            renderDashboard();
+        });
+
+        function setupForm() {
+            const form = document.getElementById('financeForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.amount = parseFloat(data.amount);
+
+                // Adjust type for storage consistency
+                if (data.category === 'Salary') data.type = 'Income';
+                // Simple override for now to ensure consistency with UI categories
+
+                dataManager.addItem('finances', data);
+                showToast('Entry added!');
+                closeModal();
+                renderDashboard();
+            });
+        }
+
+        function renderDashboard() {
+            const data = dataManager.getData('finances');
+            const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+
+            // 1. Calculate Category Totals (All Time or Current Month? Image implies running totals or Monthly. Let's do Monthly for relevance)
+            // Actually, for "Salary" $3500 usually implies monthly. Let's default to Current Month.
+            const monthData = data.filter(d => d.date.startsWith(currentMonth));
+
+            const categoryTotals = {};
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            monthData.forEach(d => {
+                if (!categoryTotals[d.category]) categoryTotals[d.category] = 0;
+                categoryTotals[d.category] += d.amount;
+
+                if (d.type === 'Income' || d.category === 'Salary') totalIncome += d.amount;
+                else totalExpense += d.amount;
+            });
+
+            // 2. Render Cards
+            const grid = document.getElementById('finance-grid');
+            grid.innerHTML = '';
+
+            FIXED_CATEGORIES.forEach(cat => {
+                const amount = categoryTotals[cat.name] || 0;
+                const isExpense = cat.name !== 'Salary' && cat.name !== 'Investments'; // Assumption based on typical flow
+                // Use a budget or salary as baseline for %.
+                // If Income, % of what? Maybe target? 
+                // If Expense, % of Income?
+
+                let percent = 0;
+                if (totalIncome > 0) {
+                    percent = Math.round((amount / totalIncome) * 100);
+                }
+
+                // Progress Ring SVG
+                const radius = 6;
+                const circumference = 2 * Math.PI * radius;
+                const dashArray = circumference;
+                const dashOffset = circumference - (percent / 100) * circumference;
+                const color = isExpense ? '#10b981' : '#10b981'; // Image uses green for everything seemingly? Or maybe Salary is green, others red? Image cards look consistent. Let's use green rings.
+
+                const html = `
+                    <div class="finance-card">
+                        <div>
+                            <div class="finance-card-header">
+                                <span>${cat.icon}</span>
+                                <span>${cat.name}</span>
+                            </div>
+                            <div class="finance-amount">
+                                ${isExpense && amount > 0 ? '-' : ''}$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                        <div class="finance-meta">
+                            <span>${percent}%</span>
+                             <div class="progress-ring-container">
+                                <svg width="16" height="16" style="transform: rotate(-90deg);">
+                                    <circle cx="8" cy="8" r="${radius}" fill="none" stroke="#e5e7eb" stroke-width="2"></circle>
+                                    <circle cx="8" cy="8" r="${radius}" fill="none" stroke="#10b981" stroke-width="2"
+                                            stroke-dasharray="${dashArray}" stroke-dashoffset="${dashOffset}"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += html;
+            });
+
+            // 3. Radar Chart
+            // Filter specific expense categories for the chart (Rent, Travel, Food, Transport, Entertainment) - visual match
+            const radarLabels = ['Rent', 'Entertainment', 'Transports', 'Food', 'Travel'];
+            const radarData = radarLabels.map(l => categoryTotals[l] || 0);
+
+            const ctx = document.getElementById('financeRadar').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: radarLabels,
+                    datasets: [{
+                        label: 'Spending',
+                        data: radarData,
+                        fill: true,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: { line: { tension: 0, borderWidth: 1 } },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6' },
+                            pointLabels: {
+                                font: { size: 10, family: "'Inter', sans-serif" },
+                                color: '#9ca3af'
+                            }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 4. Monthly History
+            // Mocking history or grouping real data by month
+            const months = {};
+            data.forEach(d => {
+                const m = d.date.slice(0, 7); // 2024-12
+                if (!months[m]) months[m] = 0;
+                if (d.type === 'Income' || d.category === 'Salary') months[m] += d.amount;
+                else months[m] -= d.amount;
+            });
+
+            const monthContainer = document.getElementById('monthListContainer');
+            monthContainer.innerHTML = '';
+
+            Object.keys(months).sort().reverse().slice(0, 4).forEach(m => {
+                const date = new Date(m + '-01');
+                const monthName = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+                const val = months[m];
+
+                monthContainer.innerHTML += `
+                    <div class="month-item">
+                        <div class="flex items-center gap-2">
+                            <span style="font-size: 0.8rem; color: #9ca3af;">▶</span>
+                            <span>${monthName}</span>
+                        </div>
+                        <span style="color: ${val >= 0 ? '#10b981' : '#6b7280'}; font-weight: 500;">
+                            $${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                    </div>
+                 `;
+            });
+        }
+
+        function openAddModal() {
+            document.getElementById('financeForm').reset();
+            document.querySelector('input[name="date"]').valueAsDate = new Date();
+            document.getElementById('financeModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('financeModal').classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>
