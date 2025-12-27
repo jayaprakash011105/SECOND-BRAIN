@@ -19,6 +19,31 @@
             </div>
         </div>
 
+        <!-- Stats Section -->
+        <div class="goals-stats">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e3f2fd; color: #1976d2;">🎯</div>
+                <div class="stat-info">
+                    <h3 id="statTotal">0</h3>
+                    <p>Total Goals</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #fff3e0; color: #f57c00;">⚡</div>
+                <div class="stat-info">
+                    <h3 id="statProgress">0</h3>
+                    <p>In Progress</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e8f5e9; color: #388e3c;">✅</div>
+                <div class="stat-info">
+                    <h3 id="statCompleted">0</h3>
+                    <p>Completed</p>
+                </div>
+            </div>
+        </div>
+
         <div class="view-controls">
             <div class="view-tabs" id="viewTabs">
                 <button class="view-tab" data-view="year">🎯 2026 Goals</button>
@@ -28,7 +53,7 @@
             <input type="text" id="searchInput" class="form-input search-box" placeholder="Search goals...">
         </div>
 
-        <div id="goalsContainer"></div>
+        <div id="goalsContainer" class="goals-grid"></div>
     </div>
 
     <!-- Add/Edit Modal -->
@@ -145,8 +170,29 @@
             });
         }
 
+        function updateStats(goals) {
+            document.getElementById('statTotal').textContent = goals.length;
+            document.getElementById('statProgress').textContent = goals.filter(g => g.status === 'In Progress').length;
+            document.getElementById('statCompleted').textContent = goals.filter(g => g.status === 'Done').length;
+        }
+
+        function getProgressColor(status) {
+            if (status === 'Done') return '#4caf50';
+            if (status === 'In Progress') return '#ff9800';
+            return '#e0e0e0';
+        }
+
+        function getProgressWidth(status) {
+            if (status === 'Done') return '100%';
+            if (status === 'In Progress') return '50%';
+            return '0%';
+        }
+
         function renderGoals() {
-            let goals = dataManager.getData('goals');
+            let allGoals = dataManager.getData('goals');
+            updateStats(allGoals);
+
+            let goals = allGoals;
 
             // Filter by view
             if (currentView === 'year') {
@@ -168,31 +214,45 @@
             const container = document.getElementById('goalsContainer');
 
             if (goals.length === 0) {
-                container.innerHTML = '<p class="text-center">No goals found. Add your first goal!</p>';
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No goals found. Add your first goal!</div>';
                 return;
             }
 
-            let html = '<div class="item-list">';
+            let html = '';
             goals.forEach(goal => {
+                const progressColor = getProgressColor(goal.status);
+                const progressWidth = getProgressWidth(goal.status);
+
                 html += `
-                    <div class="list-item">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 style="margin: 0; font-size: 1.125rem;">${utils.escapeHtml(goal.goal)}</h3>
-                            <div class="flex gap-1">
-                                <button class="btn btn-secondary" onclick="editGoal('${goal.id}')">Edit</button>
-                                <button class="btn btn-danger" onclick="deleteGoal('${goal.id}')">Delete</button>
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <h3 class="goal-title">${utils.escapeHtml(goal.goal)}</h3>
+                            ${priorityBadge(goal.priority)}
+                        </div>
+                        
+                        <div class="goal-progress-container">
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${progressWidth}; background: ${progressColor}"></div>
+                            </div>
+                            <div class="flex justify-between" style="font-size: 12px; color: #666;">
+                                <span>${goal.status}</span>
+                                <span>${progressWidth}</span>
                             </div>
                         </div>
-                        <div class="flex gap-2" style="flex-wrap: wrap;">
-                            ${statusBadge(goal.status)}
-                            ${priorityBadge(goal.priority)}
-                            ${createBadge(goal.category, 'status-not-started')}
-                            ${createBadge(goal.timeframe, 'status-not-started')}
+
+                        <div class="goal-footer">
+                            <div class="goal-meta">
+                                ${createBadge(goal.category, 'status-not-started')}
+                                <span>📅 ${goal.timeframe}</span>
+                            </div>
+                            <div class="goal-actions">
+                                <button class="btn btn-xs btn-secondary" onclick="editGoal('${goal.id}')">Edit</button>
+                                <button class="btn btn-xs btn-danger" onclick="deleteGoal('${goal.id}')">Delete</button>
+                            </div>
                         </div>
                     </div>
                 `;
             });
-            html += '</div>';
 
             container.innerHTML = html;
         }
