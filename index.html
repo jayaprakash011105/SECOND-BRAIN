@@ -8,273 +8,306 @@
     <meta name="description" content="Comprehensive productivity tracking system with goals, habits, tasks, and more">
     <link rel="stylesheet" href="styles.css?v=solid">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    <span id="motivational-quote" style="font-size: 0.9rem; font-weight: 500; color: #475569;">"The only way
+        to do great work is to love what you do."</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary btn-sm" onclick="quickCapture.toggleModal()"
+            style="border-radius: 20px; padding: 6px 16px;">+ Capture</button>
+    </div>
+    </div>
 
-<body>
-    <div class="container">
-        <header class="main-header" style="margin-bottom: 10px;">
-            <div class="logo-section">
-                <img src="https://img.icons8.com/fluency/96/brain.png" alt="Brain Logo" class="brain-logo">
-                <h1>SECOND BRAIN</h1>
-            </div>
-            <div id="live-clock" style="font-weight: 500; font-size: 0.9rem; color: #64748b;"></div>
-        </header>
+    <main class="dashboard-grid">
 
-        <div class="quick-action-bar card-premium"
-            style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-radius: 16px; margin-bottom: 30px; animation: slideInRight 0.5s ease; background: white !important;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <span style="font-size: 1.2rem;">✨</span>
-                <span id="motivational-quote" style="font-size: 0.9rem; font-weight: 500; color: #475569;">"The only way
-                    to do great work is to love what you do."</span>
+        <!-- Group 1: Habits & Goals -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-1">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-primary btn-sm" onclick="quickCapture.toggleModal()"
-                    style="border-radius: 20px; padding: 6px 16px;">+ Capture</button>
+            <div class="group-links">
+                <a href="habits.html" class="group-link" onmouseenter="updateDisplay(1, 'habits')">
+                    <span class="link-icon">☑️</span>
+                    <span class="link-text">HABITS</span>
+                </a>
+                <a href="goals.html" class="group-link" onmouseenter="updateDisplay(1, 'goals')">
+                    <span class="link-icon">🎯</span>
+                    <span class="link-text">GOALS</span>
+                </a>
             </div>
         </div>
 
-        <main class="dashboard-grid">
-
-            <!-- Group 1: Habits & Goals -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-1">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 11l3 3L22 4" />
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="habits.html" class="group-link" onmouseenter="updateDisplay(1, 'habits')">
-                        <span class="link-icon">☑️</span>
-                        <span class="link-text">HABITS</span>
-                    </a>
-                    <a href="goals.html" class="group-link" onmouseenter="updateDisplay(1, 'goals')">
-                        <span class="link-icon">🎯</span>
-                        <span class="link-text">GOALS</span>
-                    </a>
+        <!-- Group 2: To-Do & Calendar -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-2">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
                 </div>
             </div>
+            <div class="group-links">
+                <a href="tasks.html" class="group-link" onmouseenter="updateDisplay(2, 'tasks')">
+                    <span class="link-icon">📝</span>
+                    <span class="link-text">TO-DO LIST</span>
+                </a>
+                <a href="calendar.html" class="group-link" onmouseenter="updateDisplay(2, 'calendar')">
+                    <span class="link-icon">📅</span>
+                    <span class="link-text">CALENDAR</span>
+                </a>
+            </div>
+        </div>
 
-            <!-- Group 2: To-Do & Calendar -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-2">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="tasks.html" class="group-link" onmouseenter="updateDisplay(2, 'tasks')">
-                        <span class="link-icon">📝</span>
-                        <span class="link-text">TO-DO LIST</span>
-                    </a>
-                    <a href="calendar.html" class="group-link" onmouseenter="updateDisplay(2, 'calendar')">
-                        <span class="link-icon">📅</span>
-                        <span class="link-text">CALENDAR</span>
-                    </a>
+
+
+        <!-- Group 4: Reading & Watchlist -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-4">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
                 </div>
             </div>
+            <div class="group-links">
+                <a href="reading.html" class="group-link" onmouseenter="updateDisplay(4, 'reading')">
+                    <span class="link-icon">📖</span>
+                    <span class="link-text">READING LIST</span>
+                </a>
+                <a href="watchlist.html" class="group-link" onmouseenter="updateDisplay(4, 'watchlist')">
+                    <span class="link-icon">🎬</span>
+                    <span class="link-text">WATCHLIST</span>
+                </a>
+            </div>
+        </div>
 
-
-
-            <!-- Group 4: Reading & Watchlist -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-4">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="reading.html" class="group-link" onmouseenter="updateDisplay(4, 'reading')">
-                        <span class="link-icon">📖</span>
-                        <span class="link-text">READING LIST</span>
-                    </a>
-                    <a href="watchlist.html" class="group-link" onmouseenter="updateDisplay(4, 'watchlist')">
-                        <span class="link-icon">🎬</span>
-                        <span class="link-text">WATCHLIST</span>
-                    </a>
+        <!-- Group 5: Projects & Notes -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-5">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                        </path>
+                    </svg>
                 </div>
             </div>
+            <div class="group-links">
+                <a href="projects.html" class="group-link" onmouseenter="updateDisplay(5, 'projects')">
+                    <span class="link-icon">🚀</span>
+                    <span class="link-text">PROJECTS</span>
+                </a>
+                <a href="notes.html" class="group-link" onmouseenter="updateDisplay(5, 'notes')">
+                    <span class="link-icon">📓</span>
+                    <span class="link-text">NOTES</span>
+                </a>
+            </div>
+        </div>
 
-            <!-- Group 5: Projects & Notes -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-5">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
-                            </path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="projects.html" class="group-link" onmouseenter="updateDisplay(5, 'projects')">
-                        <span class="link-icon">🚀</span>
-                        <span class="link-text">PROJECTS</span>
-                    </a>
-                    <a href="notes.html" class="group-link" onmouseenter="updateDisplay(5, 'notes')">
-                        <span class="link-icon">📓</span>
-                        <span class="link-text">NOTES</span>
-                    </a>
+        <!-- Group 6: Finances & Subscriptions -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-6">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
                 </div>
             </div>
+            <div class="group-links">
+                <a href="finances.html" class="group-link" onmouseenter="updateDisplay(6, 'finances')">
+                    <span class="link-icon">💰</span>
+                    <span class="link-text">FINANCES</span>
+                </a>
+                <a href="subscriptions.html" class="group-link" onmouseenter="updateDisplay(6, 'subscriptions')">
+                    <span class="link-icon">🔄</span>
+                    <span class="link-text">SUBSCRIPTIONS</span>
+                </a>
+            </div>
+        </div>
 
-            <!-- Group 6: Finances & Subscriptions -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-6">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="1" x2="12" y2="23"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="finances.html" class="group-link" onmouseenter="updateDisplay(6, 'finances')">
-                        <span class="link-icon">💰</span>
-                        <span class="link-text">FINANCES</span>
-                    </a>
-                    <a href="subscriptions.html" class="group-link" onmouseenter="updateDisplay(6, 'subscriptions')">
-                        <span class="link-icon">🔄</span>
-                        <span class="link-text">SUBSCRIPTIONS</span>
-                    </a>
+        <!-- Group 7: Workouts & Performances -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-7">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                        </path>
+                    </svg>
                 </div>
             </div>
+            <div class="group-links">
+                <a href="workouts.html" class="group-link" onmouseenter="updateDisplay(7, 'workouts')">
+                    <span class="link-icon">🏋️</span>
+                    <span class="link-text">WORKOUTS</span>
+                </a>
+                <a href="performance.html" class="group-link" onmouseenter="updateDisplay(7, 'performance')">
+                    <span class="link-icon">📊</span>
+                    <span class="link-text">PERFORMANCES</span>
+                </a>
+            </div>
+        </div>
 
-            <!-- Group 7: Workouts & Performances -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-7">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path
-                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                            </path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="workouts.html" class="group-link" onmouseenter="updateDisplay(7, 'workouts')">
-                        <span class="link-icon">🏋️</span>
-                        <span class="link-text">WORKOUTS</span>
-                    </a>
-                    <a href="performance.html" class="group-link" onmouseenter="updateDisplay(7, 'performance')">
-                        <span class="link-icon">📊</span>
-                        <span class="link-text">PERFORMANCES</span>
-                    </a>
+        <!-- Group 8: Shopping List -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-8">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
                 </div>
             </div>
+            <div class="group-links">
+                <a href="shopping.html" class="group-link" onmouseenter="updateDisplay(8, 'shopping')">
+                    <span class="link-icon">🛒</span>
+                    <span class="link-text">SHOPPING LIST</span>
+                </a>
+            </div>
+        </div>
 
-            <!-- Group 8: Shopping List -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-8">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="9" cy="21" r="1"></circle>
-                            <circle cx="20" cy="21" r="1"></circle>
-                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="shopping.html" class="group-link" onmouseenter="updateDisplay(8, 'shopping')">
-                        <span class="link-icon">🛒</span>
-                        <span class="link-text">SHOPPING LIST</span>
-                    </a>
+        <!-- Group 9: Recipes -->
+        <div class="dashboard-group">
+            <div class="large-card-display" id="display-group-9">
+                <div class="large-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
+                        <path d="M2 12h20"></path>
+                    </svg>
                 </div>
             </div>
-
-            <!-- Group 9: Recipes -->
-            <div class="dashboard-group">
-                <div class="large-card-display" id="display-group-9">
-                    <div class="large-card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path
-                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-                            </path>
-                            <path d="M2 12h20"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="group-links">
-                    <a href="recipes.html" class="group-link" onmouseenter="updateDisplay(9, 'recipes')">
-                        <span class="link-icon">🍳</span>
-                        <span class="link-text">RECIPES</span>
-                    </a>
-                </div>
+            <div class="group-links">
+                <a href="recipes.html" class="group-link" onmouseenter="updateDisplay(9, 'recipes')">
+                    <span class="link-icon">🍳</span>
+                    <span class="link-text">RECIPES</span>
+                </a>
             </div>
 
-        </main>
-    </div>
-
-    <script src="data-manager.js"></script>
-    <script src="app.js"></script>
-    <script>
-        // Design preservation: keep the hover update logic but route to global liveDashboard
-        function updateDisplay(groupId, iconKey) {
-            if (window.liveDashboard) {
-                window.liveDashboard.updateDisplay(groupId, iconKey);
-
-                // Also update the icon
-                const container = document.querySelector(`#display-group-${groupId}`);
-                const iconWrap = container.querySelector('.large-card-icon');
-                if (iconWrap && ICONS[iconKey]) {
-                    iconWrap.innerHTML = ICONS[iconKey];
-                }
+            // Also update the icon
+            const container = document.querySelector(`#display-group-${groupId}`);
+            const iconWrap = container.querySelector('.large-card-icon');
+            if (iconWrap && ICONS[iconKey]) {
+            iconWrap.innerHTML = ICONS[iconKey];
             }
-        }
+            }
+            }
 
-        const ICONS = {
-            habits: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
-            goals: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>',
-            tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
-            calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
-            reading: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>',
-            watchlist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>',
-            projects: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>',
-            notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
-            finances: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
-            subscriptions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>',
-            workouts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
-            performance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>',
-            shopping: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>',
-            recipes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg>'
-        };
+            const ICONS = {
+            habits: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>',
+            goals: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="2" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+            </svg>',
+            tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>',
+            calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>',
+            reading: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>',
+            watchlist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                <line x1="7" y1="2" x2="7" y2="22"></line>
+                <line x1="17" y1="2" x2="17" y2="22"></line>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <line x1="2" y1="7" x2="7" y2="7"></line>
+                <line x1="2" y1="17" x2="7" y2="17"></line>
+                <line x1="17" y1="17" x2="22" y2="17"></line>
+                <line x1="17" y1="7" x2="22" y2="7"></line>
+            </svg>',
+            projects: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>',
+            notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>',
+            finances: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>',
+            subscriptions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>',
+            workouts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                </path>
+            </svg>',
+            performance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 20V10" />
+                <path d="M12 20V4" />
+                <path d="M6 20v-6" />
+            </svg>',
+            shopping: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>',
+            recipes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                </path>
+                <path d="M2 12h20"></path>
+            </svg>'
+            };
 
-        const QUOTES = [
+            const QUOTES = [
             "The only way to do great work is to love what you do.",
             "Productivity is being able to do things that you were never able to do before.",
             "Focus on being productive instead of busy.",
             "Your mind is for having ideas, not holding them.",
             "Action is the foundational key to all success."
-        ];
+            ];
 
-        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('DOMContentLoaded', () => {
             const quoteEl = document.getElementById('motivational-quote');
             if (quoteEl) {
-                quoteEl.innerText = `"${QUOTES[Math.floor(Math.random() * QUOTES.length)]}"`;
+            quoteEl.innerText = `"${QUOTES[Math.floor(Math.random() * QUOTES.length)]}"`;
             }
 
             // Update clock
             const clockEl = document.getElementById('live-clock');
             function updateClock() {
-                const now = new Date();
-                clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const now = new Date();
+            clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
             setInterval(updateClock, 1000);
             updateClock();
-        });
-    </script>
-</body>
+            });
+            </script>
+            <script type="module" src="data-manager.js"></script>
+            <script src="app.js"></script>
+            </body>
 
 </html>

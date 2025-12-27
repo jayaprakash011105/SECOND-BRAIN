@@ -195,12 +195,11 @@ body {
     padding: var(--spacing-xl);
 }
 
-/* ===================================
-   HEADER
-   =================================== */
-
 .main-header {
     margin-bottom: var(--spacing-xxl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .logo-section {
@@ -695,6 +694,12 @@ body {
 
     .main-header h1 {
         font-size: 1.5rem;
+    }
+
+    .logo-section {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
     }
 
     .brain-logo {
